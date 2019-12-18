@@ -101,6 +101,10 @@ func (s *Setting) String() string {
 		return strconv.Itoa(val)
 	case *int:
 		return strconv.Itoa(*val)
+	case uint:
+		return strconv.FormatUint(uint64(val), 10)
+	case *uint:
+		return strconv.FormatUint(uint64(*val), 10)
 	default:
 		// TODO: see if we have an UnmarshalSetting implementation
 		return fmt.Sprintf("%v", val)
@@ -138,6 +142,18 @@ func (s *Setting) Equals(v string) bool {
 			return false
 		}
 		return *val == int(pv)
+	case uint:
+		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return false
+		}
+		return val == uint(pv)
+	case *uint:
+		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return false
+		}
+		return *val == uint(pv)
 	default:
 		// TODO: see if we have an Equals implementation
 		return fmt.Sprintf("%v", val) == v

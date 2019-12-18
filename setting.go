@@ -63,6 +63,18 @@ func (s *Setting) Set(v string) error {
 			return fmt.Errorf("unable to cast value to int: %w", err)
 		}
 		*val = int(pv)
+	case uint:
+		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return fmt.Errorf("unable to case value to uint: %w", err)
+		}
+		s.Value = uint(pv)
+	case *uint:
+		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+		if err != nil {
+			return fmt.Errorf("unable to case value to uint: %w", err)
+		}
+		*val = uint(pv)
 	default:
 		// TODO: see if we have a MarshalSetting implementation
 		return fmt.Errorf("type %T not supported", s.Value)

@@ -37,7 +37,7 @@ type Setting struct {
 	Description string
 
 	// DefaultValue of the Setting as a string
-	DefValue string
+	DefaultValue string
 
 	// Path of the value, this is a dot separated path internally (i.e. Debug.Enabled)
 	Path string
@@ -46,6 +46,11 @@ type Setting struct {
 	Value Value
 
 	notifiers sync.Map
+}
+
+// IsDefault will return if the value matches the default value specified in Setting.DefaultValue
+func (s *Setting) IsDefault() bool {
+	return s.Equals(s.DefaultValue)
 }
 
 // Notify provides a callback interface to when a setting has changed via Setting.Set

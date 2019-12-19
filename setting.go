@@ -1,8 +1,10 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -544,4 +546,29 @@ func (s *Setting) Equals(v string) bool {
 
 		return fmt.Sprintf("%v", val) == v
 	}
+}
+
+// Type returns a string representation of the type, but omits the pointer prefix (*)
+// This is provided to complete the interface for the github.com/spf13/pflag package
+func (s *Setting) Type() string {
+	return strings.TrimLeft(fmt.Sprintf("%T", s.Value), "*")
+}
+
+// IsBoolFlag is provided to help support boolean flags in the flag package (i.e. -debug rather than -debug=true)
+func (s *Setting) IsBoolFlag() bool {
+	switch s.Value.(type) {
+	case *bool, bool:
+		return true
+	default:
+		return false
+	}
+}
+
+// Flag will register the current Setting as a command line flag in the supplied flag.FlagSet. When the supplied fs is nill, the flag.CommandLine is used
+func (s *Setting) Flag(arg string, fs *flag.FlagSet) {
+	if fs == nil {
+		fs = flag.CommandLine
+	}
+
+	fs.Var(s, arg, s.Description)
 }

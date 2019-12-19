@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"reflect"
 	"testing"
@@ -207,4 +208,22 @@ func TestSetting_Notify(t *testing.T) {
 		t.Errorf("Notification unexpectingly called after Notify Handler Closed")
 	}
 
+}
+
+func TestSetting_FlagCompat(t *testing.T) {
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	st := &Setting{Name: "debug", Description: "Sets debug mode", Value: false}
+	st.Flag("debug", fs)
+
+	if err := fs.Parse([]string{"-debug"}); err != nil {
+		t.Errorf("Failed to set debug flag: %v", err)
+	}
+
+	if st.Value.(bool) != true {
+		t.Errorf("Failed to set Setting from flag -debug")
+	}
+
+	if st.Type() != "bool" {
+		t.Errorf("Failed to resolve type; expected %q got %q", "bool", st.Type())
+	}
 }

@@ -161,3 +161,50 @@ func TestSetting_CustomType(t *testing.T) {
 		t.Errorf("Custom object Equals not called")
 	}
 }
+
+func TestSetting_Notify(t *testing.T) {
+	name := "Test"
+	value1 := "value1"
+	value2 := "value2"
+
+	st := &Setting{Name: name, Value: value1}
+
+	notifyCalled := false
+	nh := st.Notify(NotifyFunc(func(s *Setting) {
+		if s.Name != name {
+			t.Errorf("Notification Setting Name did not Match expected name; expected %q got %q", name, s.Name)
+		}
+		notifyCalled = true
+	}))
+
+	if err := st.Set(value1); err != nil {
+		t.Fatalf("Failed to set value: %v", err)
+	}
+
+	if notifyCalled {
+		t.Errorf("Notification unexpectingly called when value was the same")
+	}
+	notifyCalled = false
+
+	if err := st.Set(value2); err != nil {
+		t.Fatalf("Failed to set value: %v", err)
+	}
+
+	if !notifyCalled {
+		t.Errorf("Notification did not execute as expected when value changed; current %q", st.String())
+	}
+	notifyCalled = false
+
+	if err := nh.Close(); err != nil {
+		t.Fatalf("Failed to close Notify Handle: %v", err)
+	}
+
+	if err := st.Set(value1); err != nil {
+		t.Fatalf("Failed to set value: %v", err)
+	}
+
+	if notifyCalled {
+		t.Errorf("Notification unexpectingly called after Notify Handler Closed")
+	}
+
+}

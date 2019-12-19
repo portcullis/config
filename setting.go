@@ -48,8 +48,25 @@ type Setting struct {
 	notifiers sync.Map
 }
 
+// Notify provides a callback interface to when a setting has changed via Setting.Set
+func (s *Setting) Notify(n Notifier) *NotifyHandle {
+	if n == nil {
+		return &NotifyHandle{}
+	}
+
+	handle := &NotifyHandle{
+		stopFunc: s.notifiers.Delete,
+	}
+
+	s.notifiers.Store(handle, n)
+
+	return handle
+}
+
 // Set the Value from the provided string
 func (s *Setting) Set(v string) error {
+	same := s.Equals(v)
+
 	switch val := s.Value.(type) {
 	case string:
 		s.Value = v
@@ -230,11 +247,31 @@ func (s *Setting) Set(v string) error {
 
 	default:
 		if unmarshaler, ok := s.Value.(Unmarshaler); ok {
-			return unmarshaler.UnmarshalSetting(v)
+			if err := unmarshaler.UnmarshalSetting(v); err != nil {
+				return fmt.Errorf("unable to marshal value to %T: %w", s.Value, err)
+			}
+		} else {
+			return fmt.Errorf("type %T not supported", s.Value)
+		}
+	}
+
+	// if same, then go ahead and exit the function and don't notify
+	if same {
+		return nil
+	}
+
+	// notify those of changed value
+	s.notifiers.Range(func(key, val interface{}) bool {
+		f, ok := val.(Notifier)
+		if !ok || f == nil {
+			s.notifiers.Delete(key)
+			return true
 		}
 
-		return fmt.Errorf("type %T not supported", s.Value)
-	}
+		f.Notify(s)
+
+		return true
+	})
 
 	return nil
 }

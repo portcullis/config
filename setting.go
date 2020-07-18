@@ -74,191 +74,192 @@ func (s *Setting) Notify(n Notifier) *NotifyHandle {
 func (s *Setting) Set(v string) error {
 	same := s.Equals(v)
 
-	switch val := s.Value.(type) {
-	case string:
-		s.Value = v
-	case *string:
-		*val = v
-	case bool:
-		pv, err := strconv.ParseBool(v)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to boolean: %w", err)
+	if unmarshaler, ok := s.Value.(Unmarshaler); ok {
+		if err := unmarshaler.UnmarshalSetting(v); err != nil {
+			return fmt.Errorf("unable to marshal value to %T: %w", s.Value, err)
 		}
-		s.Value = pv
-	case *bool:
-		pv, err := strconv.ParseBool(v)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to boolean: %w", err)
-		}
-		*val = pv
-
-	case int:
-		pv, err := strconv.ParseInt(v, 0, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int: %w", err)
-		}
-		s.Value = int(pv)
-	case *int:
-		pv, err := strconv.ParseInt(v, 0, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int: %w", err)
-		}
-		*val = int(pv)
-	case int8:
-		pv, err := strconv.ParseInt(v, 0, 8)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int8: %w", err)
-		}
-		s.Value = int8(pv)
-	case *int8:
-		pv, err := strconv.ParseInt(v, 0, 8)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int8: %w", err)
-		}
-		*val = int8(pv)
-	case int16:
-		pv, err := strconv.ParseInt(v, 0, 16)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int16: %w", err)
-		}
-		s.Value = int16(pv)
-	case *int16:
-		pv, err := strconv.ParseInt(v, 0, 16)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int16: %w", err)
-		}
-		*val = int16(pv)
-	case int32:
-		pv, err := strconv.ParseInt(v, 0, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int32: %w", err)
-		}
-		s.Value = int32(pv)
-	case *int32:
-		pv, err := strconv.ParseInt(v, 0, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int32: %w", err)
-		}
-		*val = int32(pv)
-	case int64:
-		pv, err := strconv.ParseInt(v, 0, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int64: %w", err)
-		}
-		s.Value = pv
-	case *int64:
-		pv, err := strconv.ParseInt(v, 0, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to int64: %w", err)
-		}
-		*val = pv
-
-	case uint:
-		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("unable to case value to uint: %w", err)
-		}
-		s.Value = uint(pv)
-	case *uint:
-		pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("unable to case value to uint: %w", err)
-		}
-		*val = uint(pv)
-	case uint8:
-		pv, err := strconv.ParseUint(v, 0, 8)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint8: %w", err)
-		}
-		s.Value = uint8(pv)
-	case *uint8:
-		pv, err := strconv.ParseUint(v, 0, 8)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint8: %w", err)
-		}
-		*val = uint8(pv)
-	case uint16:
-		pv, err := strconv.ParseUint(v, 0, 16)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint16: %w", err)
-		}
-		s.Value = uint16(pv)
-	case *uint16:
-		pv, err := strconv.ParseUint(v, 0, 16)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint16: %w", err)
-		}
-		*val = uint16(pv)
-	case uint32:
-		pv, err := strconv.ParseUint(v, 0, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint32: %w", err)
-		}
-		s.Value = uint32(pv)
-	case *uint32:
-		pv, err := strconv.ParseUint(v, 0, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint32: %w", err)
-		}
-		*val = uint32(pv)
-	case uint64:
-		pv, err := strconv.ParseUint(v, 0, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint64: %w", err)
-		}
-		s.Value = pv
-	case *uint64:
-		pv, err := strconv.ParseUint(v, 0, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to uint64: %w", err)
-		}
-		*val = pv
-
-	case float32:
-		pv, err := strconv.ParseFloat(v, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to float32: %w", err)
-		}
-		s.Value = float32(pv)
-	case *float32:
-		pv, err := strconv.ParseFloat(v, 32)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to float32: %w", err)
-		}
-		*val = float32(pv)
-	case float64:
-		pv, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to float64: %w", err)
-		}
-		s.Value = pv
-	case *float64:
-		pv, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to float64: %w", err)
-		}
-		*val = pv
-
-	case time.Duration:
-		pv, err := time.ParseDuration(v)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to time.Duration: %w", err)
-		}
-		s.Value = pv
-	case *time.Duration:
-		pv, err := time.ParseDuration(v)
-		if err != nil {
-			return fmt.Errorf("unable to cast value to time.Duration: %w", err)
-		}
-		*val = pv
-
-	default:
-		if unmarshaler, ok := s.Value.(Unmarshaler); ok {
-			if err := unmarshaler.UnmarshalSetting(v); err != nil {
-				return fmt.Errorf("unable to marshal value to %T: %w", s.Value, err)
+	} else {
+		switch val := s.Value.(type) {
+		case string:
+			s.Value = v
+		case *string:
+			*val = v
+		case bool:
+			pv, err := strconv.ParseBool(v)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to boolean: %w", err)
 			}
-		} else {
+			s.Value = pv
+		case *bool:
+			pv, err := strconv.ParseBool(v)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to boolean: %w", err)
+			}
+			*val = pv
+
+		case int:
+			pv, err := strconv.ParseInt(v, 0, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int: %w", err)
+			}
+			s.Value = int(pv)
+		case *int:
+			pv, err := strconv.ParseInt(v, 0, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int: %w", err)
+			}
+			*val = int(pv)
+		case int8:
+			pv, err := strconv.ParseInt(v, 0, 8)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int8: %w", err)
+			}
+			s.Value = int8(pv)
+		case *int8:
+			pv, err := strconv.ParseInt(v, 0, 8)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int8: %w", err)
+			}
+			*val = int8(pv)
+		case int16:
+			pv, err := strconv.ParseInt(v, 0, 16)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int16: %w", err)
+			}
+			s.Value = int16(pv)
+		case *int16:
+			pv, err := strconv.ParseInt(v, 0, 16)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int16: %w", err)
+			}
+			*val = int16(pv)
+		case int32:
+			pv, err := strconv.ParseInt(v, 0, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int32: %w", err)
+			}
+			s.Value = int32(pv)
+		case *int32:
+			pv, err := strconv.ParseInt(v, 0, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int32: %w", err)
+			}
+			*val = int32(pv)
+		case int64:
+			pv, err := strconv.ParseInt(v, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int64: %w", err)
+			}
+			s.Value = pv
+		case *int64:
+			pv, err := strconv.ParseInt(v, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to int64: %w", err)
+			}
+			*val = pv
+
+		case uint:
+			pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("unable to case value to uint: %w", err)
+			}
+			s.Value = uint(pv)
+		case *uint:
+			pv, err := strconv.ParseUint(v, 0, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("unable to case value to uint: %w", err)
+			}
+			*val = uint(pv)
+		case uint8:
+			pv, err := strconv.ParseUint(v, 0, 8)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint8: %w", err)
+			}
+			s.Value = uint8(pv)
+		case *uint8:
+			pv, err := strconv.ParseUint(v, 0, 8)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint8: %w", err)
+			}
+			*val = uint8(pv)
+		case uint16:
+			pv, err := strconv.ParseUint(v, 0, 16)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint16: %w", err)
+			}
+			s.Value = uint16(pv)
+		case *uint16:
+			pv, err := strconv.ParseUint(v, 0, 16)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint16: %w", err)
+			}
+			*val = uint16(pv)
+		case uint32:
+			pv, err := strconv.ParseUint(v, 0, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint32: %w", err)
+			}
+			s.Value = uint32(pv)
+		case *uint32:
+			pv, err := strconv.ParseUint(v, 0, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint32: %w", err)
+			}
+			*val = uint32(pv)
+		case uint64:
+			pv, err := strconv.ParseUint(v, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint64: %w", err)
+			}
+			s.Value = pv
+		case *uint64:
+			pv, err := strconv.ParseUint(v, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to uint64: %w", err)
+			}
+			*val = pv
+
+		case float32:
+			pv, err := strconv.ParseFloat(v, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to float32: %w", err)
+			}
+			s.Value = float32(pv)
+		case *float32:
+			pv, err := strconv.ParseFloat(v, 32)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to float32: %w", err)
+			}
+			*val = float32(pv)
+		case float64:
+			pv, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to float64: %w", err)
+			}
+			s.Value = pv
+		case *float64:
+			pv, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to float64: %w", err)
+			}
+			*val = pv
+
+		case time.Duration:
+			pv, err := time.ParseDuration(v)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to time.Duration: %w", err)
+			}
+			s.Value = pv
+		case *time.Duration:
+			pv, err := time.ParseDuration(v)
+			if err != nil {
+				return fmt.Errorf("unable to cast value to time.Duration: %w", err)
+			}
+			*val = pv
+
+		default:
 			return fmt.Errorf("type %T not supported", s.Value)
+
 		}
 	}
 
@@ -286,6 +287,10 @@ func (s *Setting) Set(v string) error {
 func (s *Setting) String() string {
 	if s.Mask {
 		return "*****"
+	}
+
+	if marshaler, ok := s.Value.(Marshaler); ok {
+		return marshaler.MarshalSetting()
 	}
 
 	switch val := s.Value.(type) {
@@ -350,16 +355,16 @@ func (s *Setting) String() string {
 		return strconv.FormatFloat(*val, 'g', -1, 64)
 
 	default:
-		if marshaler, ok := s.Value.(Marshaler); ok {
-			return marshaler.MarshalSetting()
-		}
-
 		return fmt.Sprintf("%v", val)
 	}
 }
 
 // Equals will validate that the input string is the same as the current value using the internal parsing
 func (s *Setting) Equals(v string) bool {
+	if equality, ok := s.Value.(Equality); ok {
+		return equality.Equals(v)
+	}
+
 	switch val := s.Value.(type) {
 	case string:
 		return val == v
@@ -540,10 +545,6 @@ func (s *Setting) Equals(v string) bool {
 		return *val == pv
 
 	default:
-		if equality, ok := s.Value.(Equality); ok {
-			return equality.Equals(v)
-		}
-
 		return fmt.Sprintf("%v", val) == v
 	}
 }

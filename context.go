@@ -10,11 +10,11 @@ var (
 	configSetContextKey = contextKey("config-set")
 )
 
-// FromContext extracts the config.Set instance if it exists from the provided context or nil if not found
+// FromContext extracts the config.Set instance if it exists from the provided context or config.Default if not present
 func FromContext(ctx context.Context) *Set {
 	set := ctx.Value(configSetContextKey)
 	if set == nil {
-		return nil
+		return Default
 	}
 
 	return set.(*Set)

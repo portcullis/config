@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"reflect"
@@ -174,7 +175,7 @@ func (s *Set) Range(fn func(string, *Setting) bool) {
 // Descriptions on settings can be set with teh `description` field tag.
 //
 // You can mask the Stringer of the setting (set it to output *****) by setting the field tag `mask:"true"`. This is really important to do to passwords/tokens/etc... to make sure they don't end up in logs.
-func (s *Set) Bind(value interface{}) {
+func (s *Set) Bind(value interface{}) *Set {
 	rvalue := reflect.ValueOf(value)
 
 	if rvalue.Kind() != reflect.Ptr {
@@ -198,6 +199,8 @@ func (s *Set) Bind(value interface{}) {
 		description := fieldType.Tag.Get("description")
 		name := fieldType.Name
 		masked := fieldType.Tag.Get("mask") == "true"
+		flagName := fieldType.Tag.Get("flag")
+
 		if tagName := fieldType.Tag.Get("setting"); tagName != "" {
 			name = tagName
 		}
@@ -222,8 +225,14 @@ func (s *Set) Bind(value interface{}) {
 			// all other field types we pass in the pointer to the value as a setting so that it is "bound"
 			setting := s.Setting(name, fieldValue.Addr().Interface(), description)
 			setting.Mask = masked
+			// does it have a flag?
+			if flagName != "" {
+				setting.Flag(flagName, flag.CommandLine)
+			}
 		}
 	}
+
+	return s
 }
 
 // Dump the current settings to the specified io.Writer in a tab separated list

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -40,8 +41,8 @@ func (s *Set) Get(name string) *Setting {
 	return nil
 }
 
-// Set an existing setting by name. This is useful to populate from command line and/or environment, etc...
-func (s *Set) Set(name, value string) (bool, error) {
+// Update an existing setting by name. This is useful to populate from command line and/or environment, etc...
+func (s *Set) Update(name, value string) (bool, error) {
 	setting := s.Get(name)
 	if setting == nil {
 		return false, nil
@@ -172,7 +173,7 @@ func (s *Set) Range(fn func(string, *Setting) bool) {
 //
 // Fields names can be overwritten with the `setting` field tag.
 //
-// Descriptions on settings can be set with teh `description` field tag.
+// Descriptions on settings can be set with the `description` field tag.
 //
 // You can mask the Stringer of the setting (set it to output *****) by setting the field tag `mask:"true"`. This is really important to do to passwords/tokens/etc... to make sure they don't end up in logs.
 func (s *Set) Bind(value interface{}) *Set {
@@ -225,6 +226,7 @@ func (s *Set) Bind(value interface{}) *Set {
 			// all other field types we pass in the pointer to the value as a setting so that it is "bound"
 			setting := s.Setting(name, fieldValue.Addr().Interface(), description)
 			setting.Mask = masked
+
 			// does it have a flag?
 			if flagName != "" {
 				setting.Flag(flagName, flag.CommandLine)
@@ -239,12 +241,26 @@ func (s *Set) Bind(value interface{}) *Set {
 func (s *Set) Dump(w io.Writer) error {
 	tw := tabwriter.NewWriter(w, 10, 10, 5, ' ', 0)
 
-	fmt.Fprintln(tw, "Path\tType\tValue\tDescription")
-
+	settings := []*Setting{}
 	s.Range(func(path string, setting *Setting) bool {
-		fmt.Fprintf(tw, "%s\t%T\t%q\t%s\t\n", setting.Path, setting.Value, setting.String(), setting.Description)
+		settings = append(settings, setting)
 		return true
 	})
+
+	// sort by name
+	sort.Slice(settings, func(i, j int) bool { return settings[i].Path < settings[j].Path })
+
+	// print header
+	fmt.Fprintln(tw, "Path\tType\tValue\tDefault Value\tDescription")
+
+	// print items
+	for _, setting := range settings {
+		if setting.Mask {
+			fmt.Fprintf(tw, "%s\t%T\t%q\t\"*****\"\t%s\n", setting.Path, setting.Value, setting.String(), setting.Description)
+		} else {
+			fmt.Fprintf(tw, "%s\t%T\t%q\t%q\t%s\n", setting.Path, setting.Value, setting.String(), setting.DefaultValue, setting.Description)
+		}
+	}
 
 	return tw.Flush()
 }
@@ -272,7 +288,7 @@ func (s *Set) notifyChanged(setting *Setting) {
 		return true
 	})
 
-	// call the parent to notify if they exist to propogate upward the notification
+	// call the parent to notify if they exist to propagate upward the notification
 	if s.parent != nil {
 		s.parent.notifyChanged(setting)
 	}
